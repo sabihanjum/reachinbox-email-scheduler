@@ -64,7 +64,9 @@ const worker = new Worker(
   },
   {
     connection: {
-      url: config.redisUrl,
+      host: new URL(config.redisUrl).hostname,
+      port: parseInt(new URL(config.redisUrl).port || "6379", 10),
+      password: new URL(config.redisUrl).password || undefined,
       maxRetriesPerRequest: null,
     },
     concurrency: config.workerConcurrency,
