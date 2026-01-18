@@ -37,10 +37,13 @@ export const authMiddleware = (req: Request, res: Response, next: NextFunction) 
 };
 
 export const setAuthCookie = (res: Response, token: string) => {
+  const isProd = process.env.NODE_ENV === "production";
   res.cookie("token", token, {
     httpOnly: true,
-    sameSite: "lax",
-    secure: false,
+    // For cross-site frontend (Render), cookies must be SameSite=None and Secure
+    sameSite: isProd ? "none" : "lax",
+    secure: isProd,
     maxAge: 1000 * 60 * 60 * 24 * 7,
+    path: "/",
   });
 };
