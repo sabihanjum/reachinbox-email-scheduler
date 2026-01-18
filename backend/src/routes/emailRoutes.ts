@@ -13,7 +13,17 @@ const scheduleSchema = z.object({
   subject: z.string().min(1),
   body: z.string().min(1),
   emails: z.array(z.string().email()).min(1),
-  sendAt: z.string().optional(),
+  // Expect ISO-like datetime (e.g., 2026-01-19T00:02). If provided, must be parseable.
+  sendAt: z
+    .string()
+    .optional()
+    .refine(
+      (v) => !v || !Number.isNaN(Date.parse(v)),
+      {
+        message:
+          "Invalid sendAt datetime format. Use the picker or ISO format (YYYY-MM-DDTHH:mm)",
+      }
+    ),
   senderId: z.string().optional(),
   minDelayMs: z.number().int().positive().optional(),
   maxEmailsPerHour: z.number().int().positive().optional(),
@@ -35,6 +45,12 @@ router.post("/schedule", authMiddleware, async (req, res) => {
     const minDelayMs = parsed.minDelayMs ?? config.minDelayMs;
     const maxEmailsPerHour = parsed.maxEmailsPerHour ?? config.maxEmailsPerHour;
     const startAt = parsed.sendAt ? new Date(parsed.sendAt) : new Date();
+    if (Number.isNaN(startAt.getTime())) {
+      return res.status(400).json({
+        message:
+          "Invalid sendAt date. Please use the datetime picker or ISO format (YYYY-MM-DDTHH:mm)",
+      });
+    }
 
     const jobs = await prisma.$transaction(async (tx) => {
       const records = await Promise.all(
@@ -78,7 +94,8 @@ router.post("/schedule", authMiddleware, async (req, res) => {
     res.json({ count: jobs.length, sender });
   } catch (err: any) {
     console.error("schedule error", err);
-    res.status(400).json({ message: err?.message || "Invalid payload" });
+    const message = err?.message || "Invalid payload";
+    res.status(400).json({ message });
   }
 });
 

@@ -65,7 +65,8 @@ export function ComposeModal({ isOpen, onClose, onSuccess }: ComposeModalProps) 
       onSuccess?.();
       onClose();
     } catch (err: any) {
-      setError(err.message || 'Failed to schedule emails');
+      const serverMsg = err?.response?.data?.message;
+      setError(serverMsg || err.message || 'Failed to schedule emails');
     } finally {
       setLoading(false);
     }
