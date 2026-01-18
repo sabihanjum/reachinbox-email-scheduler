@@ -63,7 +63,10 @@ const worker = new Worker(
     }
   },
   {
-    connection: redis,
+    connection: {
+      url: config.redisUrl,
+      maxRetriesPerRequest: null,
+    },
     concurrency: config.workerConcurrency,
   }
 );

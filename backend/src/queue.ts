@@ -1,10 +1,13 @@
 import { Queue } from "bullmq";
-import { redis } from "./redis";
+import { config } from "./config";
 
 export const emailQueueName = "email-queue";
 
 export const emailQueue = new Queue(emailQueueName, {
-  connection: redis,
+  connection: {
+    url: config.redisUrl,
+    maxRetriesPerRequest: null,
+  },
   defaultJobOptions: {
     removeOnComplete: true,
     removeOnFail: false,
