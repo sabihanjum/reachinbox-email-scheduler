@@ -4,7 +4,7 @@ import { prisma } from "./db";
 import { redis } from "./redis";
 import { sendEmail, markJobStatus } from "./emailSender";
 import { checkHourlyLimit } from "./rateLimiter";
-import { emailQueueName } from "./queue";
+import { emailQueueName, getRedisConnection } from "./queue";
 
 const worker = new Worker(
   emailQueueName,
@@ -63,12 +63,7 @@ const worker = new Worker(
     }
   },
   {
-    connection: {
-      host: new URL(config.redisUrl).hostname,
-      port: parseInt(new URL(config.redisUrl).port || "6379", 10),
-      password: new URL(config.redisUrl).password || undefined,
-      maxRetriesPerRequest: null,
-    },
+    connection: getRedisConnection(),
     concurrency: config.workerConcurrency,
   }
 );

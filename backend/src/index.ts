@@ -24,10 +24,19 @@ app.use("/api/auth", authRoutes);
 app.use("/api/email", emailRoutes);
 
 const start = async () => {
-  await scheduler.waitUntilReady();
-  await prisma.$connect();
-  app.listen(config.port, () => {
+  // Start HTTP server first to satisfy Render's port detection
+  app.listen(config.port, async () => {
     console.log(`✅ API listening on port ${config.port}`);
+    try {
+      await prisma.$connect();
+      // Initialize queue readiness without blocking startup
+      scheduler
+        .waitUntilReady()
+        .then(() => console.log("✅ BullMQ queue is ready"))
+        .catch((err) => console.error("⚠️ BullMQ queue not ready yet:", err?.message || err));
+    } catch (err: any) {
+      console.error("⚠️ Prisma connection failed:", err?.message || err);
+    }
   });
 };
 
