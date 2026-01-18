@@ -1,7 +1,29 @@
 'use client';
 
 import { EmailJob } from '@/lib/api';
-import { formatDistanceToNow } from 'date-fns';
+// Lightweight relative time formatter to avoid date-fns type-only export issues in some TS configs
+function formatRelative(date: Date): string {
+  const diffMs = Date.now() - date.getTime();
+  const seconds = Math.floor(diffMs / 1000);
+  const minutes = Math.floor(seconds / 60);
+  const hours = Math.floor(minutes / 60);
+  const days = Math.floor(hours / 24);
+  const months = Math.floor(days / 30);
+  const years = Math.floor(days / 365);
+
+  if (seconds < 30) return 'just now';
+  if (seconds < 60) return `${seconds} seconds ago`;
+  if (minutes < 2) return 'a minute ago';
+  if (minutes < 60) return `${minutes} minutes ago`;
+  if (hours < 2) return 'an hour ago';
+  if (hours < 24) return `${hours} hours ago`;
+  if (days < 2) return 'yesterday';
+  if (days < 30) return `${days} days ago`;
+  if (months < 2) return 'a month ago';
+  if (months < 12) return `${months} months ago`;
+  if (years < 2) return 'a year ago';
+  return `${years} years ago`;
+}
 
 interface EmailTableProps {
   jobs: EmailJob[];
@@ -45,9 +67,7 @@ export function EmailTable({ jobs, isLoading, emptyMessage }: EmailTableProps) {
               <td className="px-4 py-3 text-gray-900">{job.toEmail}</td>
               <td className="px-4 py-3 text-gray-600 truncate">{job.subject}</td>
               <td className="px-4 py-3 text-gray-500 text-xs">
-                {formatDistanceToNow(new Date(job.sentAt || job.sendAt), {
-                  addSuffix: true,
-                })}
+                {formatRelative(new Date(job.sentAt || job.sendAt))}
               </td>
               <td className="px-4 py-3">
                 <span
